@@ -9,4 +9,7 @@ pub fn main() !void {
     try stdout.print("# Progrezzo examples.\n", .{});
 
     try bw.flush(); // don't forget to flush!
+
+    const pb = try progrezzo.Progrezzo.init(100, 60, std.heap.page_allocator);
+    _ = pb;
 }
