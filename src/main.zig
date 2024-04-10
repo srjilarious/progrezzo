@@ -10,6 +10,13 @@ pub fn main() !void {
 
     try bw.flush(); // don't forget to flush!
 
-    const pb = try progrezzo.Progrezzo.init(100, 60, std.heap.page_allocator);
-    _ = pb;
+    var pb = try progrezzo.Progrezzo.init(100, 20, std.heap.page_allocator);
+    try pb.draw();
+    std.debug.print("\n", .{});
+    pb.currVal = 50;
+    try pb.draw();
+    std.debug.print("\n", .{});
+    pb.currVal = 100;
+    try pb.draw();
+    std.debug.print("\n", .{});
 }
