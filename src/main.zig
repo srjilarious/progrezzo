@@ -13,10 +13,18 @@ pub fn main() !void {
     var pb = try progrezzo.Progrezzo.init(100, 20, std.heap.page_allocator);
     try pb.draw();
     std.debug.print("\n", .{});
-    pb.currVal = 50;
+    pb.currVal = 33;
     try pb.draw();
     std.debug.print("\n", .{});
     pb.currVal = 100;
     try pb.draw();
     std.debug.print("\n", .{});
+
+    for (0..100) |val| {
+        std.debug.print("\r", .{});
+        pb.currVal = val;
+        try pb.draw();
+        // Sleep for 100 ms
+        std.time.sleep(100_000_000);
+    }
 }
