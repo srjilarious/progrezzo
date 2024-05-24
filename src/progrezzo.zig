@@ -14,48 +14,64 @@ pub const Symbol = struct {
     bytes: [4]u8,
     len: u3,
 
-    pub fn init(val: []const u8) !Symbol {
+    pub fn init(val: []const u8) Symbol {
         var sym = Symbol{ 
             .bytes = [4]u8{0, 0, 0, 0},
-            .len = try std.unicode.utf8ByteSequenceLength(val[0])
+            .len = std.unicode.utf8ByteSequenceLength(val[0]) catch unreachable
         };
 
         std.mem.copyForwards(u8, sym.bytes[0..], val[0..]);
         return sym;
     }
 
-    pub fn draw(self: *Symbol) void {
+    pub fn draw(self: *const Symbol) void {
         std.debug.print("{s}", .{self.bytes});
     }
 };
 
-// We use u21 so that unicode values can be used for styling.
+pub const StyleOpts = struct {
+    leftCap: []const u8,
+    rightCap: []const u8,
+    emptyChar: []const u8,
+    doneChar: []const u8,
+    fillChars: []const []const u8,
+};
+
 pub const Style = struct {
+    alloc: std.mem.Allocator,
     leftCap: Symbol,
     rightCap: Symbol,
     emptyChar: Symbol,
     doneChar: Symbol,
-    fillChars: std.ArrayList(Symbol),
+    fillChars: [] const Symbol,
 
-    pub fn defaultStyle(alloc: std.mem.Allocator) !Style{
-        var fill = std.ArrayList(Symbol).init(alloc);
-        try fill.append(try Symbol.init("."));
-        try fill.append(try Symbol.init(","));
-        try fill.append(try Symbol.init("-"));
-        try fill.append(try Symbol.init("="));
+    pub fn init(alloc: std.mem.Allocator, opts: StyleOpts) !Style {
+        var fill = try alloc.alloc(Symbol, opts.fillChars.len);
+        for(0..opts.fillChars.len) |idx| {
+            fill[idx] = Symbol.init(opts.fillChars[idx]);
+        } 
 
         return .{ 
-            .leftCap = try Symbol.init("["),
-            .rightCap = try Symbol.init("]"),
-            .emptyChar = try Symbol.init(" "),
-            .doneChar = try Symbol.init("#"),
+            .alloc = alloc,
+            .leftCap = Symbol.init(opts.leftCap),
+            .rightCap = Symbol.init(opts.rightCap),
+            .emptyChar = Symbol.init(opts.emptyChar),
+            .doneChar = Symbol.init(opts.doneChar),
             .fillChars = fill,
         };
     }
 
     pub fn deinit(self: *Style) void {
-        self.fillChars.deinit();
+        self.alloc.free(self.fillChars);
     }
+};
+
+pub const DefaultStyleOpts: StyleOpts = .{
+    .leftCap = "[",
+    .rightCap = "]",
+    .emptyChar = " ",
+    .doneChar = "#",
+    .fillChars = &[_][]const u8{".", ",", "-", "="}
 };
 
 pub const Progrezzo = struct {
@@ -68,15 +84,19 @@ pub const Progrezzo = struct {
     pub fn init(
         maxVal: u64, 
         lineLength: usize, 
-        alloc: std.mem.Allocator) !Progrezzo 
+        style: Style) Progrezzo 
     {
         return .{ 
-            .style = try Style.defaultStyle(alloc), 
+            .style = style, 
             .currVal = 0, 
             .maxVal = maxVal, 
             .lineLength = lineLength,
             .valueDisplay = .CurrentAndMaxValue
         };
+    }
+
+    pub fn defaultBar(maxVal: u64, lineLength: usize, alloc: std.mem.Allocator) !Progrezzo {
+        return init(maxVal, lineLength, try Style.init(alloc, DefaultStyleOpts));
     }
 
     pub fn deinit(self: *Progrezzo) void {
@@ -93,8 +113,8 @@ pub const Progrezzo = struct {
         const progWidth = pctDone * @as(f32, @floatFromInt(self.lineLength));
         const numDone: u64 = @intFromFloat(progWidth);
         const fractional = progWidth - std.math.floor(progWidth);
-        const hasPartial = self.style.fillChars.items.len > 0 and fractional > std.math.floatEps(f32);
-        const partialIdx : usize = @intFromFloat(fractional * @as(f32, @floatFromInt(self.style.fillChars.items.len)));
+        const hasPartial = self.style.fillChars.len > 0 and fractional > std.math.floatEps(f32);
+        const partialIdx : usize = @intFromFloat(fractional * @as(f32, @floatFromInt(self.style.fillChars.len)));
 
 
         self.style.leftCap.draw();
@@ -105,7 +125,7 @@ pub const Progrezzo = struct {
 
         var numEmpty = self.lineLength - numDone;
         if(hasPartial) {
-            self.style.fillChars.items[partialIdx].draw();
+            self.style.fillChars[partialIdx].draw();
             numEmpty -= 1;
         }
 

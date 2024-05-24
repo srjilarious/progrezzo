@@ -10,7 +10,7 @@ pub fn main() !void {
 
     try bw.flush(); // don't forget to flush!
 
-    var pb = try progrezzo.Progrezzo.init(100, 20, std.heap.page_allocator);
+    var pb = try progrezzo.Progrezzo.defaultBar(100, 20, std.heap.page_allocator);
     try pb.draw();
     std.debug.print("\n", .{});
     pb.currVal = 33;
@@ -20,7 +20,7 @@ pub fn main() !void {
     try pb.draw();
     std.debug.print("\n", .{});
 
-    for (0..100) |val| {
+    for (0..101) |val| {
         std.debug.print("\r", .{});
         pb.currVal = val;
         try pb.draw();
