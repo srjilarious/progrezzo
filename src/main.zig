@@ -1,5 +1,5 @@
 const std = @import("std");
-const progrezzo = @import("progrezzo");
+const pzo = @import("progrezzo");
 
 pub fn main() !void {
     const stdout_file = std.io.getStdOut().writer();
@@ -10,7 +10,7 @@ pub fn main() !void {
 
     try bw.flush(); // don't forget to flush!
 
-    var pb = try progrezzo.Progrezzo.defaultBar(100, 20, std.heap.page_allocator);
+    var pb = pzo.Progrezzo.init(100, 20, try pzo.Style.init(std.heap.page_allocator, pzo.SmoothStyleOpts));
     try pb.draw();
     std.debug.print("\n", .{});
     pb.currVal = 33;
@@ -25,6 +25,6 @@ pub fn main() !void {
         pb.currVal = val;
         try pb.draw();
         // Sleep for 100 ms
-        std.time.sleep(100_000_000);
+        std.time.sleep(20_000_000);
     }
 }

@@ -74,6 +74,14 @@ pub const DefaultStyleOpts: StyleOpts = .{
     .fillChars = &[_][]const u8{".", ",", "-", "="}
 };
 
+pub const SmoothStyleOpts: StyleOpts = .{
+    .leftCap = "\u{2595}", // Right 1/8th block
+    .rightCap = "\u{258f}", // Left 1/8th block
+    .emptyChar = " ",
+    .doneChar = "\u{2588}",
+    .fillChars = &[_][]const u8{"\u{258f}", "\u{258d}", "\u{258b}", "\u{2589}", "\u{2588}"}
+};
+
 pub const Progrezzo = struct {
     style: Style,
     currVal: u64,
