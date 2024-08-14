@@ -10,10 +10,87 @@ pub const ValueDisplay = enum {
     Percentage
 };
 
+pub const Color = enum {
+    Reset,
+    Black,
+    Red,
+    Green,
+    Yellow,
+    Blue,
+    Magenta,
+    Cyan,
+    White,
+    Gray,
+    BoldRed,
+    BoldGreen,
+    BoldYellow,
+    BoldBlue,
+    BoldMagenta,
+    BoldCyan,
+    BoldWhite
+};
+
+pub const Colors = struct {
+    fg: Color,
+    bg: Color,
+
+    pub fn reset() void {
+        std.debug.print("\x1b[0m", .{});
+    }
+
+    pub fn set(self: *const Colors) void {
+        if(self.fg == .Reset or self.bg == .Reset) {
+            reset();
+        }
+        
+        switch(self.bg) 
+        {
+            .Black => std.debug.print("\x1b[40m", .{}),
+            .Red => std.debug.print("\x1b[41m", .{}),
+            .Green => std.debug.print("\x1b[42m", .{}),
+            .Yellow => std.debug.print("\x1b[43m", .{}),
+            .Blue => std.debug.print("\x1b[44m", .{}),
+            .Magenta => std.debug.print("\x1b[45m", .{}),
+            .Cyan => std.debug.print("\x1b[46m", .{}),
+            .White => std.debug.print("\x1b[47m", .{}),
+            .Gray => std.debug.print("\x1b[40;1m", .{}),
+            .BoldRed => std.debug.print("\x1b[41;1m", .{}),
+            .BoldGreen => std.debug.print("\x1b[42;1m", .{}),
+            .BoldYellow => std.debug.print("\x1b[43;1m", .{}),
+            .BoldBlue => std.debug.print("\x1b[44;1m", .{}),
+            .BoldMagenta => std.debug.print("\x1b[45;1m", .{}),
+            .BoldCyan => std.debug.print("\x1b[46;1m", .{}),
+            .BoldWhite => std.debug.print("\x1b[47;1m", .{}),
+            else => {},
+        }
+
+        switch(self.fg) 
+        {
+            .Black => std.debug.print("\x1b[30m", .{}),
+            .Red => std.debug.print("\x1b[31m", .{}),
+            .Green => std.debug.print("\x1b[32m", .{}),
+            .Yellow => std.debug.print("\x1b[33m", .{}),
+            .Blue => std.debug.print("\x1b[34m", .{}),
+            .Magenta => std.debug.print("\x1b[35m", .{}),
+            .Cyan => std.debug.print("\x1b[36m", .{}),
+            .White => std.debug.print("\x1b[37m", .{}),
+            .Gray => std.debug.print("\x1b[30;1m", .{}),
+            .BoldRed => std.debug.print("\x1b[31;1m", .{}),
+            .BoldGreen => std.debug.print("\x1b[32;1m", .{}),
+            .BoldYellow => std.debug.print("\x1b[33;1m", .{}),
+            .BoldBlue => std.debug.print("\x1b[34;1m", .{}),
+            .BoldMagenta => std.debug.print("\x1b[35;1m", .{}),
+            .BoldCyan => std.debug.print("\x1b[36;1m", .{}),
+            .BoldWhite => std.debug.print("\x1b[37;1m", .{}),
+            else => {},
+        }
+    }
+};
+
 pub const Symbol = struct {
     bytes: [4]u8,
     len: u3,
-
+    
     pub fn init(val: []const u8) Symbol {
         var sym = Symbol{ 
             .bytes = [4]u8{0, 0, 0, 0},
@@ -35,6 +112,10 @@ pub const StyleOpts = struct {
     emptyChar: []const u8,
     doneChar: []const u8,
     fillChars: []const []const u8,
+    capColor: ?Colors = null,
+    fillColor: ?Colors = null,
+    emptyColor: ?Colors = null,
+    withColor: bool = true
 };
 
 pub const Style = struct {
@@ -44,6 +125,10 @@ pub const Style = struct {
     emptyChar: Symbol,
     doneChar: Symbol,
     fillChars: [] const Symbol,
+    capColor: ?Colors = null,
+    fillColor: ?Colors = null,
+    emptyColor: ?Colors = null,
+    withColor: bool,
 
     pub fn init(alloc: std.mem.Allocator, opts: StyleOpts) !Style {
         var fill = try alloc.alloc(Symbol, opts.fillChars.len);
@@ -57,7 +142,11 @@ pub const Style = struct {
             .rightCap = Symbol.init(opts.rightCap),
             .emptyChar = Symbol.init(opts.emptyChar),
             .doneChar = Symbol.init(opts.doneChar),
+            .capColor = opts.capColor,
+            .fillColor = opts.fillColor,
+            .emptyColor = opts.emptyColor,
             .fillChars = fill,
+            .withColor = opts.withColor
         };
     }
 
@@ -79,7 +168,10 @@ pub const SmoothStyleOpts: StyleOpts = .{
     .rightCap = "\u{258f}", // Left 1/8th block
     .emptyChar = " ",
     .doneChar = "\u{2588}",
-    .fillChars = &[_][]const u8{"\u{258f}", "\u{258d}", "\u{258b}", "\u{2589}", "\u{2588}"}
+    .fillChars = &[_][]const u8{"\u{258f}", "\u{258d}", "\u{258b}", "\u{2589}", "\u{2588}"},
+    .capColor = .{ .fg = .BoldWhite, .bg = .Reset },
+    .emptyColor = .{ .fg = .Red, .bg = .Red },
+    .fillColor = .{ .fg = .BoldGreen, .bg = .Red },
 };
 
 pub const Progrezzo = struct {
@@ -116,6 +208,15 @@ pub const Progrezzo = struct {
                 @as(f32, @floatFromInt(self.maxVal));
     }
 
+    fn handleColor(color: ?Colors) void {
+        if(color == null) {
+            Colors.reset();
+        }
+        else {
+            color.?.set();
+        }
+    }
+
     pub fn draw(self: *Progrezzo) !void {
         const pctDone = self.percentDone();
         const progWidth = pctDone * @as(f32, @floatFromInt(self.lineLength));
@@ -125,8 +226,10 @@ pub const Progrezzo = struct {
         const partialIdx : usize = @intFromFloat(fractional * @as(f32, @floatFromInt(self.style.fillChars.len)));
 
 
+        handleColor(self.style.capColor);
         self.style.leftCap.draw();
 
+        handleColor(self.style.fillColor);
         for(0..numDone) |_| {
             self.style.doneChar.draw();
         }
@@ -137,10 +240,12 @@ pub const Progrezzo = struct {
             numEmpty -= 1;
         }
 
+        handleColor(self.style.emptyColor);
         for(0..numEmpty) |_| {
             self.style.emptyChar.draw();
         }
         
+        handleColor(self.style.capColor);
         self.style.rightCap.draw();
     }
 };
