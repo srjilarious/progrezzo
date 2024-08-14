@@ -158,9 +158,12 @@ pub const Style = struct {
 pub const DefaultStyleOpts: StyleOpts = .{
     .leftCap = "[",
     .rightCap = "]",
-    .emptyChar = " ",
+    .emptyChar = "-",
     .doneChar = "#",
-    .fillChars = &[_][]const u8{".", ",", "-", "="}
+    .fillChars = &[_][]const u8{"-", "="},
+    .capColor = .{ .fg = .Yellow, .bg = .Reset },
+    .emptyColor = .{ .fg = .Gray, .bg = .Reset },
+    .fillColor = .{ .fg = .BoldGreen, .bg = .Reset },
 };
 
 pub const SmoothStyleOpts: StyleOpts = .{
