@@ -207,7 +207,8 @@ pub const Progrezzo = struct {
     }
 
     fn percentDone(self: *Progrezzo) f32 {
-        return @as(f32, @floatFromInt(self.currVal)) / 
+        const val = @min(self.currVal, self.maxVal);
+        return @as(f32, @floatFromInt(val)) / 
                 @as(f32, @floatFromInt(self.maxVal));
     }
 
@@ -227,7 +228,6 @@ pub const Progrezzo = struct {
         const fractional = progWidth - std.math.floor(progWidth);
         const hasPartial = self.style.fillChars.len > 0 and fractional > std.math.floatEps(f32);
         const partialIdx : usize = @intFromFloat(fractional * @as(f32, @floatFromInt(self.style.fillChars.len)));
-
 
         handleColor(self.style.capColor);
         self.style.leftCap.draw();

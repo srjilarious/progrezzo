@@ -1,7 +1,7 @@
 const std = @import("std");
 const pzo = @import("progrezzo");
 
-fn testPbar(pb: *pzo.Progrezzo) void {
+fn testPbar(pb: *pzo.Progrezzo, step: usize) void {
     try pb.draw();
     std.debug.print("\n", .{});
     pb.currVal = 33;
@@ -11,9 +11,9 @@ fn testPbar(pb: *pzo.Progrezzo) void {
     try pb.draw();
     std.debug.print("\n", .{});
 
-    for (0..101) |val| {
+    while (pb.currVal < pb.maxVal) {
         std.debug.print("\r", .{});
-        pb.currVal = val;
+        pb.currVal += step;
         try pb.draw();
         // Sleep for 50 ms
         std.time.sleep(50_000_000);
@@ -31,15 +31,15 @@ pub fn main() !void {
     try bw.flush(); // don't forget to flush!
 
     {
-        var pb = pzo.Progrezzo.init(100, 30, try pzo.Style.init(std.heap.page_allocator, pzo.DefaultStyleOpts));
+        var pb = pzo.Progrezzo.init(1024 * 30, 40, try pzo.Style.init(std.heap.page_allocator, pzo.DefaultStyleOpts));
         defer pb.deinit();
-        testPbar(&pb);
+        testPbar(&pb, 256);
     }
 
     {
-        var pb = pzo.Progrezzo.init(100, 30, try pzo.Style.init(std.heap.page_allocator, pzo.SmoothStyleOpts));
+        var pb = pzo.Progrezzo.init(1024 * 30, 40, try pzo.Style.init(std.heap.page_allocator, pzo.SmoothStyleOpts));
         defer pb.deinit();
-        testPbar(&pb);
+        testPbar(&pb, 128);
     }
 
     // A custom style
@@ -55,8 +55,8 @@ pub fn main() !void {
             .emptyColor = .{ .fg = .Blue, .bg = .Reset },
             .fillColor = .{ .fg = .BoldYellow, .bg = .Blue },
         });
-        var pb = pzo.Progrezzo.init(100, 30, style);
+        var pb = pzo.Progrezzo.init(1024 * 30, 40, style);
         defer pb.deinit();
-        testPbar(&pb);
+        testPbar(&pb, 128);
     }
 }
