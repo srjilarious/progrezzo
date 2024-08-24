@@ -102,7 +102,18 @@ pub const Symbol = struct {
     }
 };
 
-pub const StyleOpts = struct { leftCap: []const u8, rightCap: []const u8, emptyChar: []const u8, doneChar: []const u8, fillChars: []const []const u8, capColor: ?Colors = null, fillColor: ?Colors = null, emptyColor: ?Colors = null, withColor: bool = true };
+pub const StyleOpts = struct {
+    leftCap: []const u8,
+    rightCap: []const u8,
+    emptyChar: []const u8,
+    doneChar: []const u8,
+    fillChars: []const []const u8,
+    capColor: ?Colors = null,
+    fillColor: ?Colors = null,
+    emptyColor: ?Colors = null,
+    withColor: bool = true,
+    withPercentage: bool = true,
+};
 
 pub const Style = struct {
     alloc: std.mem.Allocator,
@@ -115,6 +126,7 @@ pub const Style = struct {
     fillColor: ?Colors = null,
     emptyColor: ?Colors = null,
     withColor: bool,
+    withPercentage: bool,
 
     pub fn init(alloc: std.mem.Allocator, opts: StyleOpts) !Style {
         var fill = try alloc.alloc(Symbol, opts.fillChars.len);
@@ -122,7 +134,19 @@ pub const Style = struct {
             fill[idx] = Symbol.init(opts.fillChars[idx]);
         }
 
-        return .{ .alloc = alloc, .leftCap = Symbol.init(opts.leftCap), .rightCap = Symbol.init(opts.rightCap), .emptyChar = Symbol.init(opts.emptyChar), .doneChar = Symbol.init(opts.doneChar), .capColor = opts.capColor, .fillColor = opts.fillColor, .emptyColor = opts.emptyColor, .fillChars = fill, .withColor = opts.withColor };
+        return .{
+            .alloc = alloc,
+            .leftCap = Symbol.init(opts.leftCap),
+            .rightCap = Symbol.init(opts.rightCap),
+            .emptyChar = Symbol.init(opts.emptyChar),
+            .doneChar = Symbol.init(opts.doneChar),
+            .capColor = opts.capColor,
+            .fillColor = opts.fillColor,
+            .emptyColor = opts.emptyColor,
+            .fillChars = fill,
+            .withColor = opts.withColor,
+            .withPercentage = opts.withPercentage,
+        };
     }
 
     pub fn deinit(self: *Style) void {
@@ -216,6 +240,10 @@ pub const Progrezzo = struct {
 
         try self.handleColor(self.style.capColor);
         try self.style.rightCap.draw(self.printer);
+
+        if (self.style.withPercentage) {
+            try self.printer.print(" {d:.2} %", .{pctDone * 100.0});
+        }
         try self.printer.flush();
     }
 };
