@@ -113,6 +113,10 @@ pub const StyleOpts = struct {
     emptyColor: ?Colors = null,
     withColor: bool = true,
     withPercentage: bool = true,
+    withValue: bool = false,
+    withTotal: bool = false,
+    valueDivisor: u64 = 1,
+    valueUnit: ?[]const u8 = null,
 };
 
 pub const Style = struct {
@@ -127,6 +131,10 @@ pub const Style = struct {
     emptyColor: ?Colors = null,
     withColor: bool,
     withPercentage: bool,
+    withValue: bool,
+    withTotal: bool,
+    valueDivisor: u64 = 1,
+    valueUnit: ?[]const u8 = null,
 
     pub fn init(alloc: std.mem.Allocator, opts: StyleOpts) !Style {
         var fill = try alloc.alloc(Symbol, opts.fillChars.len);
@@ -146,6 +154,10 @@ pub const Style = struct {
             .fillChars = fill,
             .withColor = opts.withColor,
             .withPercentage = opts.withPercentage,
+            .withValue = opts.withValue,
+            .withTotal = opts.withTotal,
+            .valueDivisor = opts.valueDivisor,
+            .valueUnit = opts.valueUnit,
         };
     }
 
@@ -240,6 +252,20 @@ pub const Progrezzo = struct {
 
         try self.handleColor(self.style.capColor);
         try self.style.rightCap.draw(self.printer);
+
+        if (self.style.withValue) {
+            try self.printer.print(" {d}", .{self.currVal / self.style.valueDivisor});
+            if (self.style.valueUnit != null) {
+                try self.printer.print("{s}", .{self.style.valueUnit.?});
+            }
+        }
+
+        if (self.style.withValue) {
+            try self.printer.print(" / {d}", .{self.maxVal / self.style.valueDivisor});
+            if (self.style.valueUnit != null) {
+                try self.printer.print("{s}", .{self.style.valueUnit.?});
+            }
+        }
 
         if (self.style.withPercentage) {
             try self.printer.print(" {d:.2} %", .{pctDone * 100.0});

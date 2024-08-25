@@ -32,7 +32,13 @@ pub fn main() !void {
     }
 
     {
-        var pb = pzo.Progrezzo.init(1024 * 30, 40, try pzo.Style.init(std.heap.page_allocator, pzo.SmoothStyleOpts), printer);
+        var style = pzo.SmoothStyleOpts;
+        style.withValue = true;
+        style.withTotal = true;
+        style.valueDivisor = 10;
+        style.valueUnit = "MB";
+
+        var pb = pzo.Progrezzo.init(1024 * 30, 40, try pzo.Style.init(std.heap.page_allocator, style), printer);
         defer pb.deinit();
         try testPbar(&pb, 128);
     }
