@@ -9,83 +9,6 @@ pub const Colors = printer.Style;
 
 pub const ValueDisplay = enum { None, CurrentValueOnly, CurrentAndMaxValue, Percentage };
 
-// pub const Color = enum {
-//     Reset,
-//     Black,
-//     Red,
-//     Green,
-//     Yellow,
-//     Blue,
-//     Magenta,
-//     Cyan,
-//     White,
-//     Gray,
-//     BoldRed,
-//     BoldGreen,
-//     BoldYellow,
-//     BoldBlue,
-//     BoldMagenta,
-//     BoldCyan,
-//     BoldWhite
-// };
-//
-// pub const Colors = struct {
-//     fg: Color,
-//     bg: Color,
-//
-//     pub fn reset() void {
-//         std.debug.print("\x1b[0m", .{});
-//     }
-//
-//     pub fn set(self: *const Colors) void {
-//         if(self.fg == .Reset or self.bg == .Reset) {
-//             reset();
-//         }
-//
-//         switch(self.bg)
-//         {
-//             .Black => std.debug.print("\x1b[40m", .{}),
-//             .Red => std.debug.print("\x1b[41m", .{}),
-//             .Green => std.debug.print("\x1b[42m", .{}),
-//             .Yellow => std.debug.print("\x1b[43m", .{}),
-//             .Blue => std.debug.print("\x1b[44m", .{}),
-//             .Magenta => std.debug.print("\x1b[45m", .{}),
-//             .Cyan => std.debug.print("\x1b[46m", .{}),
-//             .White => std.debug.print("\x1b[47m", .{}),
-//             .Gray => std.debug.print("\x1b[40;1m", .{}),
-//             .BoldRed => std.debug.print("\x1b[41;1m", .{}),
-//             .BoldGreen => std.debug.print("\x1b[42;1m", .{}),
-//             .BoldYellow => std.debug.print("\x1b[43;1m", .{}),
-//             .BoldBlue => std.debug.print("\x1b[44;1m", .{}),
-//             .BoldMagenta => std.debug.print("\x1b[45;1m", .{}),
-//             .BoldCyan => std.debug.print("\x1b[46;1m", .{}),
-//             .BoldWhite => std.debug.print("\x1b[47;1m", .{}),
-//             else => {},
-//         }
-//
-//         switch(self.fg)
-//         {
-//             .Black => std.debug.print("\x1b[30m", .{}),
-//             .Red => std.debug.print("\x1b[31m", .{}),
-//             .Green => std.debug.print("\x1b[32m", .{}),
-//             .Yellow => std.debug.print("\x1b[33m", .{}),
-//             .Blue => std.debug.print("\x1b[34m", .{}),
-//             .Magenta => std.debug.print("\x1b[35m", .{}),
-//             .Cyan => std.debug.print("\x1b[36m", .{}),
-//             .White => std.debug.print("\x1b[37m", .{}),
-//             .Gray => std.debug.print("\x1b[30;1m", .{}),
-//             .BoldRed => std.debug.print("\x1b[31;1m", .{}),
-//             .BoldGreen => std.debug.print("\x1b[32;1m", .{}),
-//             .BoldYellow => std.debug.print("\x1b[33;1m", .{}),
-//             .BoldBlue => std.debug.print("\x1b[34;1m", .{}),
-//             .BoldMagenta => std.debug.print("\x1b[35;1m", .{}),
-//             .BoldCyan => std.debug.print("\x1b[36;1m", .{}),
-//             .BoldWhite => std.debug.print("\x1b[37;1m", .{}),
-//             else => {},
-//         }
-//     }
-// };
-//
 pub const Symbol = struct {
     bytes: [4]u8,
     len: u3,
@@ -111,6 +34,12 @@ pub const StyleOpts = struct {
     capColor: ?Colors = null,
     fillColor: ?Colors = null,
     emptyColor: ?Colors = null,
+    percentColor: ?Colors = null,
+    // Used for brackets around percent, value from total separator
+    separatorColor: ?Colors = null,
+    valueColor: ?Colors = null,
+    totalColor: ?Colors = null,
+    unitColor: ?Colors = null,
     withColor: bool = true,
     withPercentage: bool = true,
     withValue: bool = false,
@@ -129,6 +58,12 @@ pub const Style = struct {
     capColor: ?Colors = null,
     fillColor: ?Colors = null,
     emptyColor: ?Colors = null,
+    percentColor: ?Colors = null,
+    // Used for brackets around percent, value from total separator
+    separatorColor: ?Colors = null,
+    valueColor: ?Colors = null,
+    totalColor: ?Colors = null,
+    unitColor: ?Colors = null,
     withColor: bool,
     withPercentage: bool,
     withValue: bool,
@@ -151,6 +86,11 @@ pub const Style = struct {
             .capColor = opts.capColor,
             .fillColor = opts.fillColor,
             .emptyColor = opts.emptyColor,
+            .percentColor = opts.percentColor,
+            .separatorColor = opts.separatorColor,
+            .valueColor = opts.valueColor,
+            .totalColor = opts.totalColor,
+            .unitColor = opts.unitColor,
             .fillChars = fill,
             .withColor = opts.withColor,
             .withPercentage = opts.withPercentage,
@@ -175,6 +115,9 @@ pub const DefaultStyleOpts: StyleOpts = .{
     .capColor = .{ .fg = .Yellow, .bg = .Reset },
     .emptyColor = .{ .fg = .Gray, .bg = .Reset },
     .fillColor = .{ .fg = .BrightGreen, .bg = .Reset },
+    .percentColor = .{ .fg = .BrightWhite, .bg = .Reset, .mod = .{ .bold = true } },
+    .valueColor = .{ .fg = .BrightWhite, .bg = .Reset },
+    .totalColor = .{ .fg = .BrightWhite, .bg = .Reset },
 };
 
 pub const SmoothStyleOpts: StyleOpts = .{
@@ -186,6 +129,9 @@ pub const SmoothStyleOpts: StyleOpts = .{
     .capColor = .{ .fg = .BrightWhite, .bg = .Reset },
     .emptyColor = .{ .fg = .Red, .bg = .Red },
     .fillColor = .{ .fg = .BrightGreen, .bg = .Red },
+    .percentColor = .{ .fg = .BrightWhite, .bg = .Reset, .mod = .{ .bold = true } },
+    .valueColor = .{ .fg = .BrightWhite, .bg = .Reset },
+    .totalColor = .{ .fg = .BrightWhite, .bg = .Reset },
 };
 
 //pub const ProgrezzoModel = struct {}
@@ -254,20 +200,34 @@ pub const Progrezzo = struct {
         try self.style.rightCap.draw(self.printer);
 
         if (self.style.withValue) {
-            try self.printer.print(" {d}", .{self.currVal / self.style.valueDivisor});
+            try self.handleColor(self.style.separatorColor);
+            try self.printer.print(" [", .{});
+
+            try self.handleColor(self.style.valueColor);
+            try self.printer.print("{d}", .{self.currVal / self.style.valueDivisor});
             if (self.style.valueUnit != null) {
+                try self.handleColor(self.style.unitColor);
                 try self.printer.print("{s}", .{self.style.valueUnit.?});
             }
         }
 
-        if (self.style.withValue) {
-            try self.printer.print(" / {d}", .{self.maxVal / self.style.valueDivisor});
+        if (self.style.withTotal) {
+            try self.handleColor(self.style.separatorColor);
+            try self.printer.print(" / ", .{});
+
+            try self.handleColor(self.style.totalColor);
+            try self.printer.print("{d}", .{self.maxVal / self.style.valueDivisor});
             if (self.style.valueUnit != null) {
+                try self.handleColor(self.style.unitColor);
                 try self.printer.print("{s}", .{self.style.valueUnit.?});
             }
+
+            try self.handleColor(self.style.separatorColor);
+            try self.printer.print("]", .{});
         }
 
         if (self.style.withPercentage) {
+            try self.handleColor(self.style.percentColor);
             try self.printer.print(" {d:.2} %", .{pctDone * 100.0});
         }
         try self.printer.flush();
