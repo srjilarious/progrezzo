@@ -199,10 +199,12 @@ pub const Progrezzo = struct {
         try self.handleColor(self.style.capColor);
         try self.style.rightCap.draw(self.printer);
 
-        if (self.style.withValue) {
+        if (self.style.withValue or self.style.withTotal) {
             try self.handleColor(self.style.separatorColor);
             try self.printer.print(" [", .{});
+        }
 
+        if (self.style.withValue) {
             try self.handleColor(self.style.valueColor);
             try self.printer.print("{d}", .{self.currVal / self.style.valueDivisor});
             if (self.style.valueUnit != null) {
@@ -212,8 +214,10 @@ pub const Progrezzo = struct {
         }
 
         if (self.style.withTotal) {
-            try self.handleColor(self.style.separatorColor);
-            try self.printer.print(" / ", .{});
+            if (self.style.withValue) {
+                try self.handleColor(self.style.separatorColor);
+                try self.printer.print(" / ", .{});
+            }
 
             try self.handleColor(self.style.totalColor);
             try self.printer.print("{d}", .{self.maxVal / self.style.valueDivisor});
@@ -221,7 +225,9 @@ pub const Progrezzo = struct {
                 try self.handleColor(self.style.unitColor);
                 try self.printer.print("{s}", .{self.style.valueUnit.?});
             }
+        }
 
+        if (self.style.withValue or self.style.withTotal) {
             try self.handleColor(self.style.separatorColor);
             try self.printer.print("]", .{});
         }

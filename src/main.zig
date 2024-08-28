@@ -55,6 +55,8 @@ pub fn main() !void {
             .capColor = .{ .fg = .BrightCyan, .bg = .Reset },
             .emptyColor = .{ .fg = .Blue, .bg = .Reset },
             .fillColor = .{ .fg = .BrightYellow, .bg = .Blue },
+            .withValue = true,
+            .valueUnit = " kB",
         });
         var pb = pzo.Progrezzo.init(1024 * 30, 40, style, printer);
         defer pb.deinit();
